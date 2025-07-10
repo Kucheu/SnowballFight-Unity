@@ -1,0 +1,3 @@
+[submodule "Assets"]
+	path = SnowBallFight/Assets/PrivateAssets
+	url = https://github.com/Kucheu/SnowballFighter-PrivateAssets.git
