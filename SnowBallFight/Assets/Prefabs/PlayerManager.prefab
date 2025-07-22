@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4284293524516440864}
-  - component: {fileID: 6104630829901569822}
+  - component: {fileID: 4973101088975869385}
   - component: {fileID: 3528661086063301575}
   m_Layer: 0
   m_Name: PlayerManager
@@ -25,14 +25,15 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4953764780758997903}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 337.98077, y: 133.82231, z: 247.75629}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6104630829901569822
+--- !u!114 &4973101088975869385
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -41,19 +42,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 4953764780758997903}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ObservedComponentsFoldoutOpen: 1
-  Group: 0
-  prefixField: -1
-  observableSearch: 2
-  Synchronization: 3
-  OwnershipTransfer: 0
-  ObservedComponents: []
-  viewIdField: 0
-  InstantiationId: 0
-  isRuntimeInstantiated: 0
+  GlobalObjectIdHash: 809283171
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 0
+  AllowOwnerToParent: 0
 --- !u!114 &3528661086063301575
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -66,8 +70,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 225075c861cb964418b5a56985d69ac8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  teamType: 1
-  PV: {fileID: 0}
-  userName: 
-  kills: 0
-  deaths: 0
+  ShowTopMostFoldoutHeaderGroup: 1
+  playerControllerPrefab: {fileID: 703287614635137334, guid: f2cc33322154b4c44819f78b60cf47b4, type: 3}
