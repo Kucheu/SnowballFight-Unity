@@ -15,7 +15,8 @@ namespace GameplayCore
             Lobby,
             ErrorMenu,
             ChangeTeamMenu,
-            PauseMenu
+            PauseMenu,
+            ConnectMenu
         }
     }
 }

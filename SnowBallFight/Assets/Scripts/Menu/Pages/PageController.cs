@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,26 +7,19 @@ namespace GameplayCore
 {
     namespace Menu
     {
-        public class PageController : MonoBehaviour
+        public class PageController : MonoBehaviourSingleton<PageController>
         {
-            public static PageController Instance;
             public Page[] pages;
 
             private Hashtable m_Pages;
-            private List<Page> m_OnList;
-            private List<Page> m_OffList;
 
             public PageType activePageType = PageType.none;
 
-            private void Awake()
+            protected override void Awake()
             {
-                Instance = this;
-
+                base.Awake();
                 m_Pages = new Hashtable();
-
                 RegistryAllPage();
-
-                
             }
 
             #region publicFunctions
@@ -33,26 +27,39 @@ namespace GameplayCore
             {
                 if (_pageType == PageType.none) return;
                 if (!PageExists(_pageType)) return;
-                
+                if (activePageType != PageType.none)
+                {
+                    Page _offPage = GetPage(activePageType);
+                    _offPage.ClosePage();
+                }
 
                 Page _page = GetPage(_pageType);
                 activePageType = _page.pageType;
                 _page.OpenPage();
 
             }
-            public void TurnPageOff(PageType _off, PageType _on = PageType.none)
-            {
-                if (_off == PageType.none) return;
-                if(!PageExists(_off)) return;
 
-                Page _offPage = GetPage(_off);
-                _offPage.ClosePage();
+            internal void TurnPageOff(PageType pageType)
+            {
+                if (activePageType != pageType) return;
+                if (!PageExists(pageType)) return;
+
+                Page page = GetPage(pageType);
+                page.ClosePage();
+            }
+
+            public void ChangePage(PageType off, PageType on)
+            {
+                if (off == PageType.none) return;
+                if (!PageExists(off)) return;
+
+                Page page = GetPage(off);
+                page.ClosePage();
                 activePageType = PageType.none;
 
-                TurnPageOn(_on);
-                
-
+                TurnPageOn(on);
             }
+
             public bool StepBackPage()
             {
                 if (activePageType == PageType.none) return false;
@@ -62,7 +69,7 @@ namespace GameplayCore
 
                 if (activePage.previousPageType == PageType.none) return false;
 
-                TurnPageOff(activePage.pageType, activePage.previousPageType);
+                ChangePage(activePage.pageType, activePage.previousPageType);
 
                 return true;
             }
@@ -72,7 +79,7 @@ namespace GameplayCore
             #region privateFunctions
             private void RegistryAllPage()
             {
-                foreach(Page _page in pages)
+                foreach (Page _page in pages)
                 {
                     RegisterPage(_page);
                 }
@@ -81,7 +88,7 @@ namespace GameplayCore
             private void RegisterPage(Page _page)
             {
                 if (PageExists(_page.pageType)) return;
-                
+
 
                 m_Pages.Add(_page.pageType, _page);
 
@@ -89,8 +96,8 @@ namespace GameplayCore
 
             private Page GetPage(PageType _pageType)
             {
-                if(!PageExists(_pageType)) return null;
-                
+                if (!PageExists(_pageType)) return null;
+
 
                 return (Page)m_Pages[_pageType];
             }

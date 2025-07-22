@@ -3,27 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using Photon.Pun;
+
 public class KillFeed : MonoBehaviour
 {
     public GameObject killInfoPrefab, KillFeedPanel;
     public Sprite snowballUiImage, randomDeathImage;
-    
-    private void Update()
-    {
-        if(Input.GetKeyDown(KeyCode.P))
-        {
-            SendKillInfo("Player 1", "", "Player 2");
-        }
-    }
 
-    public void  SendKillInfo(string whoDead, string what, string whoKill)
+    public void  SendKillInfo(string whoDead, string whoKill)
     {
-        StartCoroutine(ShowKillInfo(whoDead, what, whoKill));
+        StartCoroutine(ShowKillInfo(whoDead, whoKill));
     }
 
     
-    private IEnumerator ShowKillInfo(string whoDead, string what, string whoKill )
+    private IEnumerator ShowKillInfo(string whoDead, string whoKill )
     {
         //create
         GameObject _killInfo = Instantiate(killInfoPrefab);

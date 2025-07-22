@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using GameplayCore.Menu;
-using Photon.Pun;
-public class PauseMenu : MonoBehaviourPunCallbacks
+
+public class PauseMenu : MonoBehaviour
 {
 
     public static PauseMenu Instance;
@@ -21,15 +21,12 @@ public class PauseMenu : MonoBehaviourPunCallbacks
     }
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.M))
+        if (Input.GetKeyDown(KeyCode.M))
         {
-            if(menuActive)
+            if (menuActive)
             {
-                if(PageController.Instance.activePageType == PageType.ChangeTeamMenu)
-                {
-                    PageController.Instance.TurnPageOff(PageType.ChangeTeamMenu);
-                    CloseMenu();
-                }
+                PageController.Instance.TurnPageOff(PageType.ChangeTeamMenu);
+                CloseMenu();
             }
             else
             {
@@ -37,7 +34,7 @@ public class PauseMenu : MonoBehaviourPunCallbacks
                 OpenMenu();
             }
         }
-        if(Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
             if (PageController.Instance.activePageType == PageType.none)
             {
@@ -46,7 +43,7 @@ public class PauseMenu : MonoBehaviourPunCallbacks
             }
             else
             {
-                if(!PageController.Instance.StepBackPage())
+                if (!PageController.Instance.StepBackPage())
                 {
                     PageController.Instance.TurnPageOff(PageController.Instance.activePageType);
                     CloseMenu();
@@ -76,30 +73,6 @@ public class PauseMenu : MonoBehaviourPunCallbacks
         PageController.Instance.TurnPageOn(PageType.ChangeTeamMenu);
     }
 
-    public void changeTeam(string _teamType)
-    {
-
-        firstChangeTeam = true;
-        switch (_teamType)
-        {
-            case "RedTeam":
-                playerManager.ChangeTeam(TeamType.RedTeam);
-                break;
-            case "BlueTeam":
-                playerManager.ChangeTeam(TeamType.BlueTeam);
-                break;
-            default:
-                playerManager.ChangeTeam(TeamType.BlueTeam);
-                break;
-        }
-        if(firstCamera.activeSelf)
-        {
-            firstCamera.SetActive(false);
-        }
-        CloseMenu();
-        PageController.Instance.TurnPageOff(PageType.ChangeTeamMenu);
-    }
-
     public void Resume()
     {
         PageController.Instance.TurnPageOff(PageController.Instance.activePageType);
@@ -108,14 +81,8 @@ public class PauseMenu : MonoBehaviourPunCallbacks
 
     public void QuitToMenu()
     {
-        PhotonNetwork.LeaveRoom();
-        
-    }
+        Debug.LogError("QUIT GAME - NOT IMPLEMENTET");
+       // PhotonNetwork.LeaveRoom();
 
-    public override void  OnLeftRoom()
-    {
-        Destroy(FindObjectOfType<RoomManager>().gameObject);
-        PhotonNetwork.LoadLevel(0);
     }
-    
 }

@@ -1,92 +1,100 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using Photon.Pun;
-public class SnowBall : MonoBehaviour
+﻿using UnityEngine;
+using Unity.Netcode;
+using System;
+using System.Collections;
+
+public class SnowBall : NetworkBehaviour
 {
-    public TeamType teamType;
-    public PlayerManager snowballOwner;
-    public AudioClip audioDestroySnowball;
+    public delegate void OnSnowballHitDelegate(string killer, string killed);
+    public static event OnSnowballHitDelegate OnSnowballHit;
 
+    [SerializeField]
+    private Rigidbody snowballRigidbody;
+    [SerializeField]
+    private Collider snowballCollider;
+    [SerializeField]
+    private PoolObjectSettings snowballVFXPoolSettings;
+    [SerializeField]
+    private SnowballSettingsSO snowballSettings;
 
-    PhotonView PV;
-    Rigidbody rb;
-    Score score;
-    AudioSource audioSource;
-    MeshRenderer meshRenderer;
-    Collider SnowballCollider;
+    private string ownerID;
+    private NetworkVariable<TeamType> teamType = new NetworkVariable<TeamType>();
 
-    private void Awake()
+    protected override void OnNetworkPreSpawn(ref NetworkManager networkManager)
     {
-        PV = GetComponent<PhotonView>();
-        rb = GetComponent<Rigidbody>();
-        score = FindObjectOfType<Score>();
-        audioSource = GetComponent<AudioSource>();
-        meshRenderer = GetComponent<MeshRenderer>();
-        SnowballCollider = GetComponent<Collider>();
+        base.OnNetworkPreSpawn(ref networkManager);
+        transform.localScale = new Vector3(snowballSettings.size, snowballSettings.size, snowballSettings.size);
+        snowballRigidbody.mass = snowballSettings.ballMass;
     }
 
-    private void Start()
+    protected override void OnNetworkPostSpawn()
     {
-        if (!PV.IsMine)
+        base.OnNetworkPostSpawn();
+        if (IsServer)
         {
-            Destroy(rb);
+            StartCoroutine(EnableColliderCoroutine());
         }
+    }
 
-        object[] data = PV.InstantiationData;
-        int snowballOwnerID = (int)data[0];
-        snowballOwner = PhotonView.Find(snowballOwnerID).gameObject.GetComponent<PlayerManager>();
+    private IEnumerator EnableColliderCoroutine()
+    {
+        yield return new WaitForSeconds(0.1f);
+        snowballCollider.enabled = true;
     }
 
     private void Update()
     {
-        if(transform.position.y < -10)
+        if (transform.position.y < -10)
         {
-            StartCoroutine(DestroySnowball());
+            DestroySnowball();
         }
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        base.OnNetworkDespawn();
+        var vfx = PoolFactory.Instance.GetObject(snowballVFXPoolSettings);
+        vfx.gameObject.transform.position = transform.position;
+        vfx.gameObject.transform.rotation = transform.rotation;
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if(collision.transform.tag == "Player")
+        if (collision.gameObject.TryGetComponent<PlayerController>(out PlayerController player))
         {
-            PlayerController _player = collision.gameObject.GetComponent<PlayerController>();
-            
-            if (_player.GetTeam() != teamType)
+            if (player.GetTeam() != teamType.Value && !player.IsKilled)
             {
-                _player.getHit();
-                score.AddPoint(teamType);
-                snowballOwner.GetKill();
-                PV.RPC("KillInfo", RpcTarget.All, snowballOwner.userName, _player.playerManager.userName);
+                player.GetHitRpc();
+                OnSnowballHit?.Invoke(ownerID, player.OwnerID);
             }
-            
         }
-
-        StartCoroutine(DestroySnowball());
-
-
-
+        DestroySnowball();
     }
 
-    private IEnumerator DestroySnowball()
+    private void DestroySnowball()
     {
-        meshRenderer.enabled = false;
-        SnowballCollider.enabled = false;
-        if(!audioSource.isPlaying)
-        {
-            audioSource.PlayOneShot(audioDestroySnowball);
-        }
-        yield return new WaitForSeconds(audioDestroySnowball.length);
-
-        if (PV.IsMine)
-        {
-            PhotonNetwork.Destroy(gameObject);
-        }
+        NetworkObject.Despawn(true);
     }
 
-    [PunRPC]
-    public void KillInfo(string whoKill, string whoDead)
+    private void OnDrawGizmos()
     {
-        FindObjectOfType<KillFeed>().SendKillInfo(whoDead, "snowball", whoKill);
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(transform.position, transform.position + (transform.forward * 3));
+    }
+
+    internal void SetTeam(TeamType value)
+    {
+        teamType.Value = value;
+    }
+
+    public void SetOwner(string ownerID)
+    {
+        Debug.LogError("Snowball OWNER :" + ownerID);
+        this.ownerID = ownerID;
+    }
+
+    internal void SetForce()
+    {
+        snowballRigidbody.AddForce(transform.forward * snowballSettings.throwSpeed, ForceMode.Impulse);
     }
 }

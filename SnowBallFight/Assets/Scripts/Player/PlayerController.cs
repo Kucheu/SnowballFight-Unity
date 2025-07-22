@@ -1,97 +1,114 @@
-﻿using Photon.Pun;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using TMPro;
-public class PlayerController : MonoBehaviour
-{
-    [SerializeField] GameObject cameraholder, snowBallholder;
+using Unity.Netcode;
+using System;
+using Unity.Collections;
 
-    [SerializeField] float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime, throwForce;
-    
-    [SerializeField] TMP_Text userName;
+public class PlayerController : NetworkBehaviour
+{
+    public event Action PlayerTeamChanged;
+
+    [SerializeField]
+    private GameObject cameraholder;
+    [SerializeField]
+    private GameObject snowBallholder;
+
+    [SerializeField] private float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
+    [SerializeField] private NetworkObject snowballPrefab;
 
     [SerializeField] AudioSource audioSource;
+
+
     float verticalLookRoattion;
     public bool grounded;
     Vector3 smoothMoveVelocity;
     Vector3 moveAmount;
 
-    Rigidbody rb;
-    PhotonView PV;
+    Rigidbody playerRigidbody;
     Animator animator;
-    public PlayerManager playerManager;
+
+    private NetworkVariable<FixedString64Bytes> ownerID = new NetworkVariable<FixedString64Bytes>();
+    private NetworkVariable<TeamType> teamType = new NetworkVariable<TeamType>();
+    private NetworkVariable<bool> isKilled = new NetworkVariable<bool>();
+
+    public string OwnerID => ownerID.Value.ToString();
+    public bool IsKilled => isKilled.Value;
+
     private void Awake()
     {
-        rb = GetComponent<Rigidbody>();
-        PV = GetComponent<PhotonView>();
+        playerRigidbody = GetComponent<Rigidbody>();
         animator = GetComponentInChildren<Animator>();
-
-        playerManager = PhotonView.Find((int)PV.InstantiationData[0]).GetComponent<PlayerManager>();
     }
-    public void Start()
+
+    public override void OnNetworkSpawn()
     {
-        if(!PV.IsMine)
+        base.OnNetworkSpawn();
+        teamType.OnValueChanged += OnTeamValueChanged;
+        PlayerTeamChanged?.Invoke(); //for set after spawn
+        if (IsOwner)
         {
-            Destroy(GetComponentInChildren<Camera>().gameObject);
-            Destroy(rb);
-            
-            userName.text = playerManager.userName;
+            CameraController.Instance.FollowObject(cameraholder.transform);
+            Cursor.lockState = CursorLockMode.Locked;
         }
-        else
-        {
-            GetComponentInChildren<SkinnedMeshRenderer>().enabled = false;
-            userName.text = "";
-        }
-        
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        base.OnNetworkDespawn();
+        teamType.OnValueChanged -= OnTeamValueChanged;
     }
 
     private void Update()
     {
-        if (!PV.IsMine) return;
+        if (!IsOwner) return;
 
-        if(Cursor.lockState == CursorLockMode.Locked)
+        if(true)//Cursor.lockState == CursorLockMode.Locked)
         {
             Look();
             Move();
             Jump();
             Shoot();
         }
-        
-        
-
-        if(transform.position.y < 10)
+        else
         {
-            Die();
+            //moveAmount = Vector3.zero;
         }
+
+        if(transform.position.y < -10)
+        {
+            GetHitRpc();
+        }
+    }
+
+    public void SetTeam(TeamType teamType)
+    {
+        this.teamType.Value = teamType;
+    }
+
+    public void SetOwnerID(string ownerID)
+    {
+        this.ownerID.Value = ownerID;
     }
 
     private void FixedUpdate()
     {
-        if (!PV.IsMine) return;
-        if(Cursor.lockState == CursorLockMode.Locked)
+        if (!IsOwner) return;
+        if(true)//Cursor.lockState == CursorLockMode.Locked)
         {
-            rb.MovePosition(rb.position + transform.TransformDirection(moveAmount) * Time.fixedDeltaTime);
-            bool walkState;
-            if (moveAmount.z > 0.5)
-            {
-                walkState = true;
-            }
-            else
-            {
-                walkState = false;
-            }
-            PV.RPC("WalkAnimmation", RpcTarget.All, walkState);
+            playerRigidbody.MovePosition(playerRigidbody.position + transform.TransformDirection(moveAmount) * Time.fixedDeltaTime);
         }
-        
+        animator.SetFloat("MoveX", moveAmount.x/sprintSpeed);
+        animator.SetFloat("MoveZ", moveAmount.z/sprintSpeed);
+
     }
 
     void Shoot()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            PV.RPC("ShootAnimation", RpcTarget.All);
+            animator.SetTrigger("Shoot");
         }
     }
     void Move()
@@ -105,7 +122,7 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space) && grounded)
         {
-            rb.AddForce(transform.up * jumpForce);
+            playerRigidbody.AddForce(transform.up * jumpForce);
         }
     }
 
@@ -114,7 +131,7 @@ public class PlayerController : MonoBehaviour
         transform.Rotate(Vector3.up * Input.GetAxisRaw("Mouse X") * mouseSensitivity);
 
         verticalLookRoattion += Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
-        verticalLookRoattion = Mathf.Clamp(verticalLookRoattion, -90f, 90f);
+        verticalLookRoattion = Mathf.Clamp(verticalLookRoattion, -89f, 89f);
 
         cameraholder.transform.localEulerAngles = Vector3.left * verticalLookRoattion; 
     }
@@ -124,79 +141,35 @@ public class PlayerController : MonoBehaviour
         grounded = _grounded;
     }
 
-    public void getHit()
+    [Rpc(SendTo.Authority)]
+    public void GetHitRpc()
     {
-        PV.RPC("RPC_TakeDamage", RpcTarget.All);
+        Debug.LogError("Killed");
+        isKilled.Value = true;
+        //animator.SetTrigger("DEAD");
     }
 
     public TeamType GetTeam()
     {
-        return playerManager.teamType;
+        return teamType.Value;
     }
 
     public void SendSnowball()
     {
-        if(PV.IsMine)
+        if(IsServer)
         {
-            object[] data = new object[1];
-
-            data[0] = playerManager.PV.ViewID;
-            
-            GameObject _snowBall;
-            if (playerManager.teamType == TeamType.BlueTeam)
-            {
-                _snowBall = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefab", "BlueSnowball"), snowBallholder.transform.position, snowBallholder.transform.rotation,0,data);
-
-            }
-            else
-            {
-                _snowBall = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefab", "RedSnowball"), snowBallholder.transform.position, snowBallholder.transform.rotation, 0, data);
-            }
-
-            Rigidbody _snowBallRb = _snowBall.GetComponent<Rigidbody>();
-            _snowBallRb.AddForce(cameraholder.transform.forward * throwForce);
-        }
-        
-    }
-
-    [PunRPC]
-    void RPC_TakeDamage()
-    {
-        if (!PV.IsMine) return;
-
-        Die();
-    }
-
-    void Die()
-    {
-        playerManager.Die();
-    }
-
-    [PunRPC]
-    void WalkAnimmation(bool walkState)
-    {
-
-        if(animator.GetBool("Walk") != walkState)
-        {
-            animator.SetBool("Walk", walkState);
-        }
-
-        if(walkState)
-        {
-            if(!audioSource.isPlaying)
-            {
-                audioSource.Play();
-            }
-        }
-        else
-        {
-            audioSource.Stop();
+            var snowballObject = Instantiate(snowballPrefab, snowBallholder.transform.position, cameraholder.transform.rotation);
+            snowballObject.Spawn(destroyWithScene: true);
+            var snowBall = snowballObject.GetComponent<SnowBall>();
+            snowBall.SetTeam(teamType.Value);
+            snowBall.SetForce();
+            snowBall.SetOwner(OwnerID);
+            //Set snowball settings like team, throw strong
         }
     }
 
-    [PunRPC]
-    void ShootAnimation()
+    public void OnTeamValueChanged(TeamType previous, TeamType current)
     {
-        animator.SetTrigger("Shoot");
+        PlayerTeamChanged?.Invoke();
     }
 }

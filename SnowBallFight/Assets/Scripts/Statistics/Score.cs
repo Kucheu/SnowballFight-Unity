@@ -1,10 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Photon.Pun;
 
-public class Score : MonoBehaviourPunCallbacks
+public class Score : MonoBehaviour
 {
+    /* TODO: SCORE
 
     public int blueScore { get; private set; } = 0;
 
@@ -69,5 +69,5 @@ public class Score : MonoBehaviourPunCallbacks
     }
    
 
-    
+    */
 }

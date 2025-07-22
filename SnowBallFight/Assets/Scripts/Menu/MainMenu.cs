@@ -3,24 +3,28 @@ using System.Collections.Generic;
 using UnityEngine;
 using GameplayCore.Menu;
 using System.Linq;
-using UnityEngine.UI;
+using TMPro;
 using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
+    [SerializeField]
+    private PageType fistPage = PageType.none;
+    [SerializeField]
+    private PageType lobbyPage;
+    [SerializeField]
+    private PageType failedConnectionPage;
 
-    public PageType fistPage = PageType.none;
+    [SerializeField]
+    private TMP_InputField usernameInput;
+    [SerializeField]
+    private TMP_InputField sessionCodeInput;
 
-
-
-
-    // Start is called before the first frame update
     void Start()
     {
         PageController.Instance.TurnPageOn(fistPage);
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -29,13 +33,32 @@ public class MainMenu : MonoBehaviour
             {
                 Debug.Log("You cant back!");
             }
-        
         }
     }
     
-    public void ChangePage(Page _page)
+    public async void StartGame()
     {
-        PageController.Instance.TurnPageOff(_page.previousPageType, _page.pageType);
+        PageController.Instance.TurnPageOn(PageType.LoadingMenu);
+        bool isConnected = await SessionManager.Instance.StartSession(usernameInput.text);
+        PageController.Instance.TurnPageOn(isConnected ? lobbyPage : failedConnectionPage);
+    }
+
+    public async void JoinGame()
+    {
+        PageController.Instance.TurnPageOn(PageType.LoadingMenu);
+        bool isConnected = await SessionManager.Instance.JoinLobby(sessionCodeInput.text, usernameInput.text);
+        PageController.Instance.TurnPageOn(isConnected ? lobbyPage : failedConnectionPage);
+    }
+
+    public void LeaveGame()
+    {
+        SessionManager.Instance.LeaveSession();
+        PageController.Instance.TurnPageOn(PageType.MainMenu);
+    }
+
+    public void ChangePage(Page page)
+    {
+        PageController.Instance.ChangePage(page.previousPageType, page.pageType);
     }
 
     public void ExitGame()

@@ -18,6 +18,7 @@ public class ShowScore : MonoBehaviour
 
     private void Update()
     {
+        /*
         if(score ==  null)
         {
             score = FindObjectOfType<Score>();
@@ -25,6 +26,7 @@ public class ShowScore : MonoBehaviour
         }
         blueScoreText.text = score.blueScore.ToString();
         redScoreText.text = score.redScore.ToString();
+        */
 
     }
 }

@@ -9,6 +9,7 @@ public class AudioManager : MonoBehaviour
 
 
     private int lastTrack;
+
     private void Awake()
     {
         audioSource = GetComponent<AudioSource>();
@@ -19,6 +20,7 @@ public class AudioManager : MonoBehaviour
 
     private void Update()
     {
+        return;
         if(!audioSource.isPlaying)
         {
             if(tracks.Length > 0)

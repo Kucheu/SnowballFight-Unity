@@ -1,25 +1,61 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
 
 public class Scoreboard : MonoBehaviour
 {
+    private struct ScoreRowData
+    {
+        public string PlayerID;
+        public PlayerScore scoreRowObject;
+        public TeamType teamType;
+
+        public ScoreRowData(string PlayerID, PlayerScore scoreRowObject, TeamType teamType)
+        {
+            this.PlayerID = PlayerID;
+            this.scoreRowObject = scoreRowObject;
+            this.teamType = teamType;
+        }
+    }
+
+
     [SerializeField]
-    GameObject scoreTemplate,title, blueSide, redSite, scoreboard;
+    private PlayerScore scorePrefab;
+    [SerializeField]
+    private Transform blueSide;
+    [SerializeField]
+    private Transform redSite;
+    [SerializeField]
+    private GameObject scoreboard;
+    [SerializeField]
+    private PlayerManager playerManager;
 
-    PlayerManager[] Players;
+    private Dictionary<string, ScoreRowData> playersData;
 
+    private void Awake()
+    {
+        playersData = new();
+        playerManager = FindAnyObjectByType<PlayerManager>();
+    }
 
+    private void OnEnable()
+    {
+        
+    }
+
+    private void OnDisable()
+    {
+        
+    }
 
     private void Update()
     {
-        if(Input.GetKey(KeyCode.Tab))
+        if (Input.GetKeyDown(KeyCode.Tab))
         {
             scoreboard.SetActive(true);
             ShowScoreboard();
         }
-        else
+        if (Input.GetKeyUp(KeyCode.Tab))
         {
             scoreboard.SetActive(false);
         }
@@ -27,47 +63,25 @@ public class Scoreboard : MonoBehaviour
 
     void ShowScoreboard()
     {
-        //Clean currentScoreboard
-        foreach (Transform child in blueSide.transform)
+        foreach(var playerStats in ScoreManager.Instance.PlayersStats)
         {
-            Destroy(child.gameObject);
-        }
-        foreach (Transform child in redSite.transform)
-        {
-            Destroy(child.gameObject);
-        }
-
-
-
-        //Add title
-        GameObject _title;
-        _title = Instantiate(title, transform);
-        _title.transform.SetParent(redSite.transform);
-        _title = Instantiate(title, transform);
-        _title.transform.SetParent(blueSide.transform);
-
-
-
-        //Show new Score
-        Players = FindObjectsOfType<PlayerManager>();
-
-        foreach (PlayerManager player in Players)
-        {
-            GameObject _player = Instantiate(scoreTemplate);
-            _player.transform.GetChild(0).GetComponent<TMP_Text>().text = player.userName;
-            _player.transform.GetChild(1).GetComponent<TMP_Text>().text = player.kills.ToString();
-            _player.transform.GetChild(2).GetComponent<TMP_Text>().text = player.deaths.ToString();
-
-            if (player.teamType == TeamType.BlueTeam)
+            if(playersData.ContainsKey(playerStats.Key))
             {
-                _player.transform.SetParent(blueSide.transform);
+                playersData[playerStats.Key].scoreRowObject.SetStats(playerStats.Value.kills, playerStats.Value.deaths);
             }
             else
             {
-                _player.transform.SetParent(redSite.transform);
+                TeamType playerTeam = GetPlayerTeam(playerStats.Key);
+                PlayerScore newScoreObjet = Instantiate(scorePrefab, playerTeam == TeamType.RedTeam ? redSite : blueSide);
+                newScoreObjet.SetUsername(SessionManager.Instance.GetPlayerUsername(playerStats.Key));
+                newScoreObjet.SetStats(0, 0);
+                playersData.Add(playerStats.Key, new ScoreRowData(playerStats.Key, newScoreObjet, playerTeam));
             }
-
-            _player.transform.localScale = new Vector3(1, 1, 1);
         }
+    }
+
+    private TeamType GetPlayerTeam(string playerID)
+    {
+        return playerManager.GetPlayerTeam(playerID);
     }
 }
