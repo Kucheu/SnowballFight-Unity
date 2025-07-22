@@ -713,6 +713,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70d018ff96789db4d94bade7958726d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerController: {fileID: 2648083745909046783}
   snowballLineControllerObject: {fileID: 1591181917951296097}
 --- !u!1001 &4019923626036849014
 PrefabInstance:
