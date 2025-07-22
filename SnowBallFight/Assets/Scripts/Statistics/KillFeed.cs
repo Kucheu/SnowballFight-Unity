@@ -6,8 +6,20 @@ using UnityEngine.UI;
 
 public class KillFeed : MonoBehaviour
 {
+
     public GameObject killInfoPrefab, KillFeedPanel;
     public Sprite snowballUiImage, randomDeathImage;
+    [SerializeField]
+    private PlayerManager playerManager;
+    [SerializeField]
+    private Color blueColor;
+    [SerializeField]
+    private Color redColor;
+
+    private void Awake()
+    {
+        playerManager = FindAnyObjectByType<PlayerManager>();
+    }
 
     public void  SendKillInfo(string whoDead, string whoKill)
     {
@@ -23,6 +35,7 @@ public class KillFeed : MonoBehaviour
         _killInfo.transform.SetAsFirstSibling();  //set as first child, oldest info is lower in hierarchy 
         _killInfo.transform.localScale = new Vector3(1, 1, 1); // repair scale 
         _killInfo.transform.GetChild(0).GetComponent<TMP_Text>().text = whoKill;
+        _killInfo.GetComponent<Image>().color = playerManager.GetPlayerTeam(whoKill) == TeamType.RedTeam ? redColor : blueColor;
 
         if(true)
         {

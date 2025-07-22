@@ -63175,6 +63175,7 @@ MonoBehaviour:
   blueSide: {fileID: 1905741720}
   redSite: {fileID: 667258944}
   scoreboard: {fileID: 349334150}
+  playerManager: {fileID: 0}
 --- !u!114 &799011253
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -106441,6 +106442,9 @@ MonoBehaviour:
   KillFeedPanel: {fileID: 1880943428}
   snowballUiImage: {fileID: 21300000, guid: 58dc2aa1010f56f4ea9426e91d1afa9b, type: 3}
   randomDeathImage: {fileID: 0}
+  playerManager: {fileID: 0}
+  blueColor: {r: 0.27694833, g: 0.2216981, b: 1, a: 0.7647059}
+  redColor: {r: 1, g: 0.2971698, b: 0.2971698, a: 0.7647059}
 --- !u!114 &1413568644
 MonoBehaviour:
   m_ObjectHideFlags: 0
