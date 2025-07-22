@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a33d0dad25bd6438d6357f0b098815, type: 3}
+  m_Name: BeamPoolObjectSettings
+  m_EditorClassIdentifier: 
+  Type: 999
+  prefab: {fileID: 4180469764968434990, guid: fc103ed440573f742928f5e81f6a56ec, type: 3}
+  beamSpeed: 0.5
