@@ -156,16 +156,21 @@ public class PlayerController : NetworkBehaviour
 
     public void SendSnowball()
     {
-        if(IsServer)
+        if(IsOwner)
         {
-            var snowballObject = Instantiate(snowballPrefab, snowBallholder.transform.position, cameraholder.transform.rotation);
-            snowballObject.Spawn(destroyWithScene: true);
-            var snowBall = snowballObject.GetComponent<SnowBall>();
-            snowBall.SetTeam(teamType.Value);
-            snowBall.SetForce();
-            snowBall.SetOwner(OwnerID);
-            //Set snowball settings like team, throw strong
+            SendSnowballRPC(snowBallholder.transform.position, cameraholder.transform.rotation);
         }
+    }
+
+    [Rpc(SendTo.Server)]
+    private void SendSnowballRPC(Vector3 position, Quaternion rotation)
+    {
+        var snowballObject = Instantiate(snowballPrefab, position, rotation);
+        snowballObject.Spawn(destroyWithScene: true);
+        var snowBall = snowballObject.GetComponent<SnowBall>();
+        snowBall.SetTeam(teamType.Value);
+        snowBall.SetForce();
+        snowBall.SetOwner(OwnerID);
     }
 
     public void OnTeamValueChanged(TeamType previous, TeamType current)

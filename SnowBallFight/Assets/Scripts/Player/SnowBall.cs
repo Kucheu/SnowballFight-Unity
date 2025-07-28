@@ -89,7 +89,6 @@ public class SnowBall : NetworkBehaviour
 
     public void SetOwner(string ownerID)
     {
-        Debug.LogError("Snowball OWNER :" + ownerID);
         this.ownerID = ownerID;
     }
 
